@@ -1,0 +1,30 @@
+{
+  "name": "qmdb-svr",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "nodemon ./bin/www",
+    "lint": "eslint .",
+    "lint-fix": "eslint --fix ."
+  },
+  "dependencies": {
+    "better-sqlite3": "^8.4.0",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "helmet": "^7.0.0",
+    "http-errors": "~1.6.3",
+    "knex": "^2.4.2",
+    "morgan": "~1.9.1",
+    "mysql2": "^3.3.3",
+    "nodemon": "^2.0.22",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^4.6.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.41.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-only-warn": "^1.1.0"
+  }
+}
