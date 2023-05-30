@@ -7,9 +7,7 @@ const helmet = require('helmet');
 const knex = require('knex')(require('./knexfile'));
 const cors = require('cors');
 require('dotenv').config();
-const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.SECRET_KEY;
 const moviesRouter = require('./routes/movies');
 const peopleRouter = require('./routes/people');
 const authenticationRouter = require('./routes/authentication');
@@ -21,24 +19,6 @@ app.use((req, res, next) => {
   req.db = knex;
   next();
 });
-
-const authorisation = (req, res, next) => {
-  if (req.header('Authorization')) {
-    const jwt = req.header('Authorization').split(' ')[1];
-
-    try {
-      const token = jwt.verify(jwt, JWT_SECRET);
-      req.username = token.name;
-      next();
-    } catch (e) {
-      res.status(401);
-      res.json({
-        error: true,
-        message: 'Invalid JWT token',
-      });
-    }
-  }
-};
 
 app.use(logger('dev'));
 app.use(express.json());
