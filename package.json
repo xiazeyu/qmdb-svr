@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "start": "nodemon ./bin/www",
-    "lint": "eslint .",
-    "lint-fix": "eslint --fix ."
+    "lint": "eslint . bin/www",
+    "lint-fix": "eslint --fix . bin/www"
   },
   "dependencies": {
+    "bcrypt": "^5.1.0",
     "better-sqlite3": "^8.4.0",
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.5",
