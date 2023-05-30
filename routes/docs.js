@@ -20,7 +20,7 @@ router.use('/', swaggerUI.serve);
 
 /**
  * @openapi
- * "/docs":
+ * "/":
  *   get:
  *     tags:
  *       - Documents

@@ -28,7 +28,7 @@ app.use(cors());
 app.use('/movies', moviesRouter);
 app.use('/people', peopleRouter);
 app.use('/user', authenticationRouter);
-app.use('/docs', documentRouter);
+app.use('/', documentRouter);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
