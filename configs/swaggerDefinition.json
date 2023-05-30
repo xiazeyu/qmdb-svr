@@ -1,84 +1,148 @@
 {
-    "openapi": "3.0.3",
-    "info": {
-        "version": "1.0.0",
-        "title": "QMDB - Movie Information API",
-        "description": "This API provides access to publicly available data on a limited number of movies published from the year 1990 from the Internet Movie Database and other sources. The API endpoints and their usage are described in detail below."
+  "openapi": "3.0.3",
+  "info": {
+    "version": "1.0.0",
+    "title": "QMDB - Movie Information API",
+    "description": "This API provides access to publicly available data on a limited number of movies published from the year 1990 from the Internet Movie Database and other sources. The API endpoints and their usage are described in detail below."
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Enter JWT Bearer token **_only_**"
+      }
     },
-    "components": {
-        "securitySchemes": {
-          "bearerAuth": {
-            "type": "http",
-            "scheme": "bearer",
-            "description": "Enter JWT Bearer token **_only_**"
+    "schemas": {
+      "InvalidYearFormat": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "boolean",
+            "example": "true"
+          },
+          "message": {
+            "type": "string",
+            "example": "Invalid year format. Format must be yyyy."
           }
-        },
-        "schemas": {
-          "InvalidYearFormat": {
-            "type": "object",
-            "properties": {
-              "error": {
-                "type": "boolean",
-                "example": "true"
-              },
-              "message": {
-                "type": "string",
-                "example": "Invalid year format. Format must be yyyy."
-              }
-            }
+        }
+      },
+      "MissingAuthHeader": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "boolean",
+            "example": "true"
           },
-          "MissingAuthHeader": {
-            "type": "object",
-            "properties": {
-              "error": {
-                "type": "boolean",
-                "example": "true"
-              },
-              "message": {
-                "type": "string",
-                "example": "Authorization header ('Bearer token') not found"
-              }
-            }
+          "message": {
+            "type": "string",
+            "example": "Authorization header ('Bearer token') not found"
+          }
+        }
+      },
+      "TokenExpired": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "boolean",
+            "example": "true"
           },
-          "TokenExpired": {
-            "type": "object",
-            "properties": {
-              "error": {
-                "type": "boolean",
-                "example": "true"
-              },
-              "message": {
-                "type": "string",
-                "example": "JWT token has expired"
-              }
-            }
+          "message": {
+            "type": "string",
+            "example": "JWT token has expired"
+          }
+        }
+      },
+      "InvalidJWT": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "boolean",
+            "example": "true"
           },
-          "InvalidJWT": {
-            "type": "object",
-            "properties": {
-              "error": {
-                "type": "boolean",
-                "example": "true"
-              },
-              "message": {
-                "type": "string",
-                "example": "Invalid JWT token"
-              }
-            }
+          "message": {
+            "type": "string",
+            "example": "Invalid JWT token"
+          }
+        }
+      },
+      "MalformedJWT": {
+        "type": "object",
+        "description": "If there was an 'Authorization:' header, but it did not contain 'Bearer ' followed by the JWT",
+        "properties": {
+          "error": {
+            "type": "boolean",
+            "example": "true"
           },
-          "InvalidPageFormat": {
-            "type": "object",
-            "properties": {
-              "error": {
-                "type": "boolean",
-                "example": "true"
-              },
-              "message": {
-                "type": "string",
-                "example": "Invalid page format. page must be a number."
-              }
-            }
+          "message": {
+            "type": "string",
+            "example": "Authorization header is malformed"
+          }
+        }
+      },
+      "InvalidPageFormat": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "boolean",
+            "example": "true"
+          },
+          "message": {
+            "type": "string",
+            "example": "Invalid page format. page must be a number."
           }
         }
       }
+    },
+    "examples": {
+      "InvalidYearFormat": {
+        "summary": "InvalidYearFormat",
+        "description": "When year format is not yyyy.",
+        "value": {
+          "error": "true",
+          "message": "Invalid year format. Format must be yyyy."
+        }
+      },
+      "MissingAuthHeader": {
+        "summary": "MissingAuthHeader",
+        "description": "When Authorization header ('Bearer token') is missing.",
+        "value": {
+          "error": "true",
+          "message": "Authorization header ('Bearer token') not found"
+        }
+      },
+      "TokenExpired": {
+        "summary": "TokenExpired",
+        "description": "If the JWT token has expired",
+        "value": {
+          "error": "true",
+          "message": "JWT token has expired"
+        }
+      },
+      "InvalidJWT": {
+        "summary": "InvalidJWT",
+        "description": "If the JWT token failed verification",
+        "value": {
+          "error": "true",
+          "message": "Invalid JWT token"
+        }
+      },
+      "MalformedJWT": {
+        "summary": "MalformedJWT",
+        "description": "If there was an ‘Authorization:’ header, but it did not contain ‘Bearer ‘ followed by the JWT",
+        "value": {
+          "error": "true",
+          "message": "Authorization header is malformed"
+        }
+      },
+      "InvalidPageFormat": {
+        "summary": "InvalidPageFormat",
+        "description": "If the page is not a number.",
+        "value": {
+          "error": "true",
+          "message": "Invalid page format. page must be a number."
+        }
+      }
+    }
+  }
 }

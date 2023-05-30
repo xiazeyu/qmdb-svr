@@ -13,17 +13,18 @@ const openapiSpecification = swaggerJsdoc({
 });
 const swaggerDocument = openapiSpecification;
 
-// const swaggerDocument = require('../assignment_data/swagger.json');
+// const SwaggerDocument = require('../assignment_data/swagger.json');
 
 // middleware that is specific to this router
 router.use('/', swaggerUI.serve);
 
 /**
  * @openapi
- * /docs:
+ * "/docs":
  *   get:
- *     tags: [Documents]
- *     description: Returns the Swagger UI with API generated from swagger-jsdoc.
+ *     tags:
+ *       - Documents
+ *     description: Returns the Swagger UI with API generated from the source code.
  *     responses:
  *       200:
  *         description: Swagger UI.
