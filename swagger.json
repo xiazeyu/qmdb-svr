@@ -1,0 +1,32 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "version": "1.0.0",
+    "title": "QMDB - Movie Information API",
+    "description": "This API provides access to publicly available data on a limited number of movies published from the year 1990 from the Internet Movie Database and other sources. The API endpoints and their usage are described in detail below."
+  },
+  "paths": {
+    "/docs": {
+      "get": {
+        "tags": [
+          "Documents"
+        ],
+        "description": "Returns the Swagger UI with API generated from swagger-jsdoc.",
+        "responses": {
+          "200": {
+            "description": "Swagger UI.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {},
+  "tags": []
+}

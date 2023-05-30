@@ -1,0 +1,84 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "version": "1.0.0",
+        "title": "QMDB - Movie Information API",
+        "description": "This API provides access to publicly available data on a limited number of movies published from the year 1990 from the Internet Movie Database and other sources. The API endpoints and their usage are described in detail below."
+    },
+    "components": {
+        "securitySchemes": {
+          "bearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "description": "Enter JWT Bearer token **_only_**"
+          }
+        },
+        "schemas": {
+          "InvalidYearFormat": {
+            "type": "object",
+            "properties": {
+              "error": {
+                "type": "boolean",
+                "example": "true"
+              },
+              "message": {
+                "type": "string",
+                "example": "Invalid year format. Format must be yyyy."
+              }
+            }
+          },
+          "MissingAuthHeader": {
+            "type": "object",
+            "properties": {
+              "error": {
+                "type": "boolean",
+                "example": "true"
+              },
+              "message": {
+                "type": "string",
+                "example": "Authorization header ('Bearer token') not found"
+              }
+            }
+          },
+          "TokenExpired": {
+            "type": "object",
+            "properties": {
+              "error": {
+                "type": "boolean",
+                "example": "true"
+              },
+              "message": {
+                "type": "string",
+                "example": "JWT token has expired"
+              }
+            }
+          },
+          "InvalidJWT": {
+            "type": "object",
+            "properties": {
+              "error": {
+                "type": "boolean",
+                "example": "true"
+              },
+              "message": {
+                "type": "string",
+                "example": "Invalid JWT token"
+              }
+            }
+          },
+          "InvalidPageFormat": {
+            "type": "object",
+            "properties": {
+              "error": {
+                "type": "boolean",
+                "example": "true"
+              },
+              "message": {
+                "type": "string",
+                "example": "Invalid page format. page must be a number."
+              }
+            }
+          }
+        }
+      }
+}

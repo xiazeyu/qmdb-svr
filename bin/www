@@ -5,7 +5,7 @@
  */
 
 const debug = require('debug')('qmdb-svr:server');
-const http = require('http');
+const http = require('http'); // eslint-disable-line no-unused-vars
 const https = require('https');
 const fs = require('fs');
 const app = require('../app');

@@ -1,11 +1,9 @@
+const cookieParser = require('cookie-parser');
+const cors = require('cors');
 const createError = require('http-errors');
 const express = require('express');
-const path = require('path');
-const cookieParser = require('cookie-parser');
-const logger = require('morgan');
 const helmet = require('helmet');
-const knex = require('knex')(require('./knexfile'));
-const cors = require('cors');
+const logger = require('morgan');
 require('dotenv').config();
 
 const moviesRouter = require('./routes/movies');
@@ -13,20 +11,20 @@ const peopleRouter = require('./routes/people');
 const authenticationRouter = require('./routes/authentication');
 const documentRouter = require('./routes/docs');
 
+const database = require('./middleware/database');
+
 const app = express();
 
-app.use((req, res, next) => {
-  req.db = knex;
-  next();
-});
-
+// Middleware
 app.use(logger('dev'));
+app.use(database);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(helmet());
 app.use(cors());
 
+// Routes
 app.use('/movies', moviesRouter);
 app.use('/people', peopleRouter);
 app.use('/user', authenticationRouter);

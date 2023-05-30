@@ -6,7 +6,7 @@ const authorization = require('../middleware/authorization');
 const JWT_SECRET = process.env.SECRET_KEY;
 const router = express.Router();
 
-const saltRounds = 42;
+const saltRounds = 10;
 
 router.post('/register', (req, res, next) => {
   const { email } = req.body;
@@ -32,12 +32,13 @@ router.post('/register', (req, res, next) => {
       }
 
       // Not matching users
-      const passwordHash = bcrypt.hashSync(password, saltRounds);
-      return req.db.from('users').insert({
-        email,
-        password: passwordHash,
-      });
-    }).then(() => {
+      return bcrypt.hash(password, saltRounds);
+    })
+    .then((passwordHash) => req.db.from('users').insert({
+      email,
+      password: passwordHash,
+    }))
+    .then(() => {
       res.status(201).json({
         success: true,
         message: 'User created',
@@ -48,10 +49,6 @@ router.post('/register', (req, res, next) => {
         message: e.message,
       });
     });
-
-  res.json({
-    message: 'User created',
-  });
 });
 
 router.post('/login', (req, res, next) => {

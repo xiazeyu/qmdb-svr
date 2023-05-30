@@ -1,11 +1,36 @@
 const express = require('express');
 
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUI = require('swagger-ui-express');
+const swaggerDefinition = require('../configs/swaggerDefinition.json');
+
 const router = express.Router();
 
-const swaggerUI = require('swagger-ui-express');
-const swaggerDocument = require('../assignment_data/swagger.json');
+const openapiSpecification = swaggerJsdoc({
+  failOnErrors: process.env.env === 'development',
+  definition: swaggerDefinition,
+  apis: ['./routes/*.js'],
+});
+const swaggerDocument = openapiSpecification;
 
+// const swaggerDocument = require('../assignment_data/swagger.json');
+
+// middleware that is specific to this router
 router.use('/', swaggerUI.serve);
+
+/**
+ * @openapi
+ * /docs:
+ *   get:
+ *     tags: [Documents]
+ *     description: Returns the Swagger UI with API generated from swagger-jsdoc.
+ *     responses:
+ *       200:
+ *         description: Swagger UI.
+ *         content:
+ *           text/html:
+ *             schema: ~
+ */
 router.get('/', swaggerUI.setup(swaggerDocument));
 
 module.exports = router;
