@@ -115,7 +115,6 @@ router.get('/search', (req, res, next) => {
       console.log(err);
       res.json({ Error: true, Message: 'Error in MySQL query' });
     });
-
 });
 
 /**
@@ -300,6 +299,5 @@ router.get('/data/:imdbID', (req, res, next) => {
       console.log(err);
       res.json({ Error: true, Message: 'Error in MySQL query' });
     });
-
 });
 module.exports = router;

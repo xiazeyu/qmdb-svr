@@ -3,7 +3,7 @@
   "info": {
     "version": "1.0.0",
     "title": "QMDB - Movie Information API",
-    "description": "This API provides access to publicly available data on a limited number of movies published from the year 1990 from the Internet Movie Database and other sources. The API endpoints and their usage are described in detail below."
+    "description": "This API provides access to publicly available data on a limited number of movies published from the year 1990 from the Internet Movie Database and other sources. The API endpoints and their usage are described in detail below. Modified by Zeyu Xia (n11398299) @ QUT 2023."
   },
   "components": {
     "securitySchemes": {

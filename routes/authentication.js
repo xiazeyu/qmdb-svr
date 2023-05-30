@@ -404,7 +404,7 @@ router.post('/logout', (req, res, next) => {
 
 /**
  * @openapi
- * "/{email}/profile":
+ * "/user/{email}/profile":
  *   get:
  *     tags:
  *       - Authentication
@@ -514,7 +514,7 @@ router.get('/:email/profile', (req, res, next) => {
 
 /**
  * @openapi
- * "/{email}/profile":
+ * "/user/{email}/profile":
  *   put:
  *     tags:
  *       - Authentication
