@@ -53,8 +53,7 @@ function deregisterRefreshToken(refreshToken, refreshExp) {
 function removeExpiredDeregisteredTokens() {
   const now = Math.floor(Date.now() / 1000);
 
-  console.log('Checking for expired refresh tokens'); // eslint-disable-line no-console
-  console.log(`There are ${invalidRefreshTokens.size} refresh tokens.`); // eslint-disable-line no-console
+  console.log(`Cleaning expired deregistered tokens. ${invalidRefreshTokens.size} refresh tokens remaining.`); // eslint-disable-line no-console
 
   invalidRefreshTokens.forEach((expiration, token) => {
     if (now >= expiration) {
