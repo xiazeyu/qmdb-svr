@@ -803,7 +803,7 @@
                         },
                         "message": {
                           "type": "string",
-                          "example": "Request body incomplete: firstName, lastName, dob and address are required"
+                          "example": "Request body incomplete: firstName, lastName, dob and address are required."
                         }
                       }
                     },
@@ -817,7 +817,7 @@
                         },
                         "message": {
                           "type": "string",
-                          "example": "Request body invalid: firstName, lastName, dob and address must be strings only"
+                          "example": "Request body invalid: firstName, lastName and address must be strings only."
                         }
                       }
                     },
@@ -831,7 +831,21 @@
                         },
                         "message": {
                           "type": "string",
-                          "example": "Invalid input: dob must be a real date in format YYYY-MM-DD"
+                          "example": "Invalid input: dob must be a real date in format YYYY-MM-DD."
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "description": "valid date in the future",
+                      "properties": {
+                        "error": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Invalid input: dob must be a date in the past."
                         }
                       }
                     }
@@ -844,7 +858,7 @@
                     "description": "If the submitted object does not contain all of the fields.",
                     "value": {
                       "error": true,
-                      "message": "Request body incomplete: firstName, lastName, dob and address are required"
+                      "message": "Request body incomplete: firstName, lastName, dob and address are required."
                     }
                   },
                   {
@@ -853,7 +867,7 @@
                     "description": "If any of the fields are not strings.",
                     "value": {
                       "error": true,
-                      "message": "Request body invalid: firstName, lastName, dob and address must be strings only"
+                      "message": "Request body invalid: firstName, lastName and address must be strings only."
                     }
                   },
                   {
@@ -862,7 +876,16 @@
                     "description": "If the date of birth is not a valid YYYY-MM-DD date (e.g. no April 31 or February 30, or February 29 on a non-leap year).",
                     "value": {
                       "error": true,
-                      "message": "Invalid input: dob must be a real date in format YYYY-MM-DD"
+                      "message": "Invalid input: dob must be a real date in format YYYY-MM-DD."
+                    }
+                  },
+                  {
+                    "futureDateOfBirth": null,
+                    "summary": "Future date of birth",
+                    "description": "dob must be a date in the past",
+                    "value": {
+                      "error": true,
+                      "message": "Invalid input: dob must be a date in the past."
                     }
                   }
                 ]

@@ -74,7 +74,7 @@ const saltRounds = 10;
  *                   type: string
  *                   example: User already exists
  */
-router.post('/register', (req, res, next) => {
+router.post('/register', (req, res) => {
   // uses users
 
   const { email, password } = req.body;
@@ -210,7 +210,7 @@ router.post('/register', (req, res, next) => {
  *                   type: string
  *                   example: Incorrect email or password
  */
-router.post('/login', (req, res, next) => {
+router.post('/login', (req, res) => {
   // uses users
 
   const { email, password } = req.body;
@@ -355,7 +355,7 @@ router.post('/login', (req, res, next) => {
  *               - "$ref": "#/components/examples/TokenExpired"
  *               - "$ref": "#/components/examples/InvalidJWT"
  */
-router.post('/refresh', (req, res, next) => {
+router.post('/refresh', (req, res) => {
   const { refreshToken } = req.body;
 
   if (!refreshToken) {
@@ -476,7 +476,7 @@ router.post('/refresh', (req, res, next) => {
  *               - "$ref": "#/components/examples/TokenExpired"
  *               - "$ref": "#/components/examples/InvalidJWT"
  */
-router.post('/logout', (req, res, next) => {
+router.post('/logout', (req, res) => {
   const { refreshToken } = req.body;
 
   if (!refreshToken) {
@@ -619,7 +619,7 @@ router.post('/logout', (req, res, next) => {
  *                   type: string
  *                   example: User not found
  */
-router.get('/:email/profile', authorization, (req, res, next) => {
+router.get('/:email/profile', authorization, (req, res) => {
   // uses users
 
   const { email } = req.params;
@@ -817,7 +817,7 @@ function isDateStringValid(dateString) {
  *                       example: true
  *                     message:
  *                       type: string
- *                       example: "Invalid input, dob must be a date in the past."
+ *                       example: "Invalid input: dob must be a date in the past."
  *             examples:
  *               - incomplete:
  *                 summary: Request body incomplete
@@ -842,9 +842,9 @@ function isDateStringValid(dateString) {
  *                 description: dob must be a date in the past
  *                 value:
  *                   error: true
- *                   message: "Invalid input, dob must be a date in the past."
+ *                   message: "Invalid input: dob must be a date in the past."
  */
-router.put('/:email/profile', authorization, (req, res, next) => {
+router.put('/:email/profile', authorization, (req, res) => {
   // uses users
 
   const { email } = req.params;
@@ -884,11 +884,11 @@ router.put('/:email/profile', authorization, (req, res, next) => {
     });
   }
 
-  if ((new Date(dateString)) > (new Date())) {
+  if ((new Date(dob)) > (new Date())) {
     // dob must be a date in the past
     return res.status(400).json({
       error: true,
-      message: 'Invalid input, dob must be a date in the past.',
+      message: 'Invalid input: dob must be a date in the past.',
     });
   }
 

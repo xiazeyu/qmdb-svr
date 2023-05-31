@@ -103,7 +103,7 @@ const router = express.Router();
  *               - "$ref": "#/components/examples/InvalidYearFormat"
  *               - "$ref": "#/components/examples/InvalidPageFormat"
  */
-router.get('/search', (req, res, next) => {
+router.get('/search', (req, res) => {
   // uses basics
 
   const { title, year, page } = req.query;
@@ -320,7 +320,7 @@ router.get('/search', (req, res, next) => {
  *                   type: string
  *                   example: No record exists of a movie with this ID
  */
-router.get('/data/:imdbID', (req, res, next) => {
+router.get('/data/:imdbID', (req, res) => {
   // uses basics, principals
 
   const { imdbID } = req.params;

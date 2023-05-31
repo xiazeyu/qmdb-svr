@@ -103,7 +103,7 @@ const {
  *                   type: string
  *                   example: No record exists of a person with this ID
  */
-router.get('/:id', authorization, (req, res, next) => {
+router.get('/:id', authorization, (req, res) => {
   // uses basics, names
 
   const { id } = req.params;
