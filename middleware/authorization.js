@@ -9,13 +9,13 @@ function checkRefreshTokenIsInvalid(refreshToken) {
 }
 
 function authorization(req, res, next) {
-  if (!('authorization' in req.headers) || !((/^Bearer ./).test(req.headers.authorization))) {
+  if (!req.get('Authorization') || !((/^Bearer ./).test(req.get('Authorization')))) {
     // MissingAuthHeader: Authorization header ('Bearer token') not found
     req.authorized = false;
     return next();
   }
 
-  const jwtToken = req.headers.authorization.replace(/^Bearer /, '');
+  const jwtToken = req.get('Authorization').replace(/^Bearer /, '');
 
   try {
     const decoded = jwt.verify(jwtToken, JWT_SECRET);

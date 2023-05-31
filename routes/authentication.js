@@ -790,7 +790,7 @@ function isDateStringValid(dateString) {
  *                       example: true
  *                     message:
  *                       type: string
- *                       example: "Request body incomplete: firstName, lastName, dob and address are required"
+ *                       example: "Request body incomplete: firstName, lastName, dob and address are required."
  *                 - type: object
  *                   description: If any of the fields are not strings.
  *                   properties:
@@ -799,7 +799,7 @@ function isDateStringValid(dateString) {
  *                       example: true
  *                     message:
  *                       type: string
- *                       example: "Request body invalid: firstName, lastName, dob and address must be strings only"
+ *                       example: "Request body invalid: firstName, lastName and address must be strings only."
  *                 - type: object
  *                   description: If the date of birth is not a valid YYYY-MM-DD date (e.g. no April 31 or February 30, or February 29 on a non-leap year).
  *                   properties:
@@ -808,26 +808,41 @@ function isDateStringValid(dateString) {
  *                       example: true
  *                     message:
  *                       type: string
- *                       example: "Invalid input: dob must be a real date in format YYYY-MM-DD"
+ *                       example: "Invalid input: dob must be a real date in format YYYY-MM-DD."
+ *                 - type: object
+ *                   description: valid date in the future
+ *                   properties:
+ *                     error:
+ *                       type: boolean
+ *                       example: true
+ *                     message:
+ *                       type: string
+ *                       example: "Invalid input, dob must be a date in the past."
  *             examples:
  *               - incomplete:
  *                 summary: Request body incomplete
  *                 description: If the submitted object does not contain all of the fields.
  *                 value:
  *                   error: true
- *                   message: "Request body incomplete: firstName, lastName, dob and address are required"
+ *                   message: "Request body incomplete: firstName, lastName, dob and address are required."
  *               - bodyInvalid:
  *                 summary: Request body invalid
  *                 description: If any of the fields are not strings.
  *                 value:
  *                   error: true
- *                   message: "Request body invalid: firstName, lastName, dob and address must be strings only"
+ *                   message: "Request body invalid: firstName, lastName and address must be strings only."
  *               - inputInvalid:
  *                 summary: Invalid input
  *                 description: If the date of birth is not a valid YYYY-MM-DD date (e.g. no April 31 or February 30, or February 29 on a non-leap year).
  *                 value:
  *                   error: true
- *                   message: "Invalid input: dob must be a real date in format YYYY-MM-DD"
+ *                   message: "Invalid input: dob must be a real date in format YYYY-MM-DD."
+ *               - futureDateOfBirth:
+ *                 summary: Future date of birth
+ *                 description: dob must be a date in the past
+ *                 value:
+ *                   error: true
+ *                   message: "Invalid input, dob must be a date in the past."
  */
 router.put('/:email/profile', authorization, (req, res, next) => {
   // uses users
@@ -841,7 +856,9 @@ router.put('/:email/profile', authorization, (req, res, next) => {
     // If the submitted object does not contain all of the fields.
     return res.status(400).json({
       error: true,
-      message: 'Request body incomplete: firstName, lastName, dob and address are required',
+      // HACK
+      // message: 'Request body incomplete: firstName, lastName, dob and address are required',
+      message: 'Request body incomplete: firstName, lastName, dob and address are required.', // HACK: proabably remove the peroid at the end.
     });
   }
 
@@ -852,14 +869,26 @@ router.put('/:email/profile', authorization, (req, res, next) => {
     // If any of the fields are not strings.
     return res.status(400).json({
       error: true,
-      message: 'Request body invalid: firstName, lastName, dob and address must be strings only',
+      // HACK
+      // message: 'Request body invalid: firstName, lastName, dob and address must be strings only',
+      message: 'Request body invalid: firstName, lastName and address must be strings only.',
     });
   }
 
   if (!isDateStringValid(dob)) {
     return res.status(400).json({
       error: true,
-      message: 'Invalid input: dob must be a real date in format YYYY-MM-DD',
+      // HACK
+      // message: 'Invalid input: dob must be a real date in format YYYY-MM-DD',
+      message: 'Invalid input: dob must be a real date in format YYYY-MM-DD.',
+    });
+  }
+
+  if ((new Date(dateString)) > (new Date())) {
+    // dob must be a date in the past
+    return res.status(400).json({
+      error: true,
+      message: 'Invalid input, dob must be a date in the past.',
     });
   }
 
@@ -872,7 +901,7 @@ router.put('/:email/profile', authorization, (req, res, next) => {
 
   if (req.username !== email) {
     // If the user is logged in with the wrong email (that is, the JWT is provided and is valid, but the credentials do not belong to the user whose profile the user is attempting to modify).
-    return req.status(403).json({
+    return res.status(403).json({
       error: true,
       message: 'Forbidden',
     });
