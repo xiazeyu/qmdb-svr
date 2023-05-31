@@ -108,7 +108,7 @@ router.get('/search', (req, res, next) => {
 
   const { title, year, page } = req.query;
 
-  if (year && ((year.length !== 4) || !(/[0-9]{4}/).test(year))) {
+  if (year && !(/^[0-9]{4}$/).test(year)) {
     // Invalid year format
     return res
       .status(400)

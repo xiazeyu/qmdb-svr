@@ -8,22 +8,14 @@ function checkRefreshTokenIsInvalid(refreshToken) {
   return invalidRefreshTokens.has(refreshToken);
 }
 
-function authorizationMalform(req, res, next) {
-  if (!('Authorization' in req.header)) {
+function authorization(req, res, next) {
+  if (!('authorization' in req.headers) || !((/^Bearer ./).test(req.headers.authorization))) {
     // MissingAuthHeader: Authorization header ('Bearer token') not found
     req.authorized = false;
     return next();
   }
 
-  if (!req.header.Authorization.match(/^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/)) {
-    // MalformedJWT: Authorization header is malformed
-    return res.status(401).json({
-      error: true,
-      message: 'Authorization header is malformed',
-    });
-  }
-
-  const jwtToken = req.header.Authorization.replace(/^Bearer /, '');
+  const jwtToken = req.headers.authorization.replace(/^Bearer /, '');
 
   try {
     const decoded = jwt.verify(jwtToken, JWT_SECRET);
@@ -54,10 +46,6 @@ function authorizationMalform(req, res, next) {
   }
 }
 
-function authorization(req, res, next) {
-
-}
-
 function deregisterRefreshToken(refreshToken, refreshExp) {
   invalidRefreshTokens.set(refreshToken, refreshExp);
 }
@@ -79,7 +67,6 @@ function removeExpiredDeregisteredTokens() {
 setInterval(removeExpiredDeregisteredTokens, process.env.env === 'development' ? 10 * 1000 : 60 * 60 * 1000);
 
 module.exports = {
-  authorizationMalform,
   authorization,
   deregisterRefreshToken,
   checkRefreshTokenIsInvalid,

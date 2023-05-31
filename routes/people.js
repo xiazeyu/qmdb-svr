@@ -1,6 +1,9 @@
 const express = require('express');
 
 const router = express.Router();
+const {
+  authorization,
+} = require('../middleware/authorization');
 
 /**
  * @openapi
@@ -100,7 +103,7 @@ const router = express.Router();
  *                   type: string
  *                   example: No record exists of a person with this ID
  */
-router.get('/:id', (req, res, next) => {
+router.get('/:id', authorization, (req, res, next) => {
   // uses basics, names
 
   const { id } = req.params;
@@ -116,7 +119,13 @@ router.get('/:id', (req, res, next) => {
         message: `Invalid query parameters: ${queryKeys.join(', ')}. Query parameters are not permitted.`,
       });
   }
-  // 3 x 401
+
+  if (!req.authorized) {
+    return res.status(401).json({
+      error: true,
+      message: "Authorization header ('Bearer token') not found",
+    });
+  }
 
   return req.db
     .from('names')

@@ -66,20 +66,6 @@
           }
         }
       },
-      "MalformedJWT": {
-        "type": "object",
-        "description": "If there was an 'Authorization:' header, but it did not contain 'Bearer ' followed by the JWT",
-        "properties": {
-          "error": {
-            "type": "boolean",
-            "example": "true"
-          },
-          "message": {
-            "type": "string",
-            "example": "Authorization header is malformed"
-          }
-        }
-      },
       "InvalidPageFormat": {
         "type": "object",
         "properties": {
@@ -125,14 +111,6 @@
         "value": {
           "error": "true",
           "message": "Invalid JWT token"
-        }
-      },
-      "MalformedJWT": {
-        "summary": "MalformedJWT",
-        "description": "If there was an ‘Authorization:’ header, but it did not contain ‘Bearer ‘ followed by the JWT",
-        "value": {
-          "error": "true",
-          "message": "Authorization header is malformed"
         }
       },
       "InvalidPageFormat": {
@@ -690,9 +668,6 @@
                     },
                     {
                       "$ref": "#/components/schemas/InvalidJWT"
-                    },
-                    {
-                      "$ref": "#/components/schemas/MalformedJWT"
                     }
                   ]
                 },
@@ -702,9 +677,6 @@
                   },
                   {
                     "$ref": "#/components/examples/InvalidJWT"
-                  },
-                  {
-                    "$ref": "#/components/examples/MalformedJWT"
                   }
                 ]
               }
@@ -911,9 +883,6 @@
                     },
                     {
                       "$ref": "#/components/schemas/InvalidJWT"
-                    },
-                    {
-                      "$ref": "#/components/schemas/MalformedJWT"
                     }
                   ]
                 },
@@ -926,9 +895,6 @@
                   },
                   {
                     "$ref": "#/components/examples/InvalidJWT"
-                  },
-                  {
-                    "$ref": "#/components/examples/MalformedJWT"
                   }
                 ]
               }

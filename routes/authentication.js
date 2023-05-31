@@ -2,7 +2,7 @@ const bcrypt = require('bcrypt');
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const {
-  authorizationMalform,
+  authorization,
   deregisterRefreshToken,
   checkRefreshTokenIsInvalid,
 } = require('../middleware/authorization');
@@ -602,11 +602,9 @@ router.post('/logout', (req, res, next) => {
  *               oneOf:
  *                 - "$ref": "#/components/schemas/TokenExpired"
  *                 - "$ref": "#/components/schemas/InvalidJWT"
- *                 - "$ref": "#/components/schemas/MalformedJWT"
  *             examples:
  *               - "$ref": "#/components/examples/TokenExpired"
  *               - "$ref": "#/components/examples/InvalidJWT"
- *               - "$ref": "#/components/examples/MalformedJWT"
  *       "404":
  *         description: If {email} corresponds to a non-existent user, the following response will be returned with a status code of 404 Not Found.
  *         content:
@@ -621,7 +619,7 @@ router.post('/logout', (req, res, next) => {
  *                   type: string
  *                   example: User not found
  */
-router.get('/:email/profile', authorizationMalform, (req, res, next) => {
+router.get('/:email/profile', authorization, (req, res, next) => {
   // uses users
 
   const { email } = req.params;
@@ -661,15 +659,18 @@ router.get('/:email/profile', authorizationMalform, (req, res, next) => {
 });
 
 function isDateStringValid(dateString) {
-  if (dateString.length !== 10) {
+  if (!(/^[0-9]{4}-[0-1][0-9]-[0-3][0-9]$/).test(dateString)) {
     return false;
   }
-  if (!(/[0-9]{4}-[0-1][0-9]-[0-3][0-9]/).test(dateString)) {
+
+  const [year, month, day] = dateString.split('-');
+
+  if (!year || !month || !day) {
     return false;
   }
 
   const date = new Date(dateString);
-  if (date instanceof Date && !isNaN(date)) {
+  if (date instanceof Date && !Number.isNaN(Number(date))) {
     return date.getFullYear() === Number(year)
       && date.getMonth() === Number(month) - 1 // Months are 0-indexed in JavaScript
       && date.getDate() === Number(day);
@@ -758,12 +759,10 @@ function isDateStringValid(dateString) {
  *                 - "$ref": "#/components/schemas/MissingAuthHeader"
  *                 - "$ref": "#/components/schemas/TokenExpired"
  *                 - "$ref": "#/components/schemas/InvalidJWT"
- *                 - "$ref": "#/components/schemas/MalformedJWT"
  *             examples:
  *               - "$ref": "#/components/examples/MissingAuthHeader"
  *               - "$ref": "#/components/examples/TokenExpired"
  *               - "$ref": "#/components/examples/InvalidJWT"
- *               - "$ref": "#/components/examples/MalformedJWT"
  *       "404":
  *         description: If {email} corresponds to a non-existent user, the following response will be returned with a status code of 404 Not Found
  *         content:
@@ -830,7 +829,7 @@ function isDateStringValid(dateString) {
  *                   error: true
  *                   message: "Invalid input: dob must be a real date in format YYYY-MM-DD"
  */
-router.put('/:email/profile', authorizationMalform, (req, res, next) => {
+router.put('/:email/profile', authorization, (req, res, next) => {
   // uses users
 
   const { email } = req.params;
