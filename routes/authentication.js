@@ -1,7 +1,11 @@
 const bcrypt = require('bcrypt');
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const authorization = require('../middleware/authorization');
+const {
+  authorizationMalform,
+  deregisterRefreshToken,
+  checkRefreshTokenIsInvalid,
+} = require('../middleware/authorization');
 
 const JWT_SECRET = process.env.SECRET_KEY;
 const router = express.Router();
@@ -77,27 +81,25 @@ router.post('/register', (req, res, next) => {
 
   if (!email || !password) {
     // Bad request
-    res.status(400).json({
+    return res.status(400).json({
       error: true,
       message: 'Request body incomplete, both email and password are required',
     });
-    return;
   }
 
-  req.db
+  return req.db
     .from('users')
     .select('*')
-    .where('email', '=', email)
+    .where('email', email)
     .then((users) => {
       if (users.length > 0) {
         // User already exists
-        req.status(409).json({
+        return res.status(409).json({
           error: true,
           message: 'User already exists',
         });
-        return;
       }
-      bcrypt.hash(password, saltRounds)
+      return bcrypt.hash(password, saltRounds)
         .then((passwordHash) => {
           req.db
             .from('users')
@@ -106,13 +108,13 @@ router.post('/register', (req, res, next) => {
               password: passwordHash,
             })
             .then(() => {
+              // User successfully created
               res.status(201).json({
                 message: 'User created',
               });
             });
         });
     });
-  res.json({});
 });
 
 /**
@@ -211,60 +213,71 @@ router.post('/register', (req, res, next) => {
 router.post('/login', (req, res, next) => {
   // uses users
 
-
   const { email, password } = req.body;
+  let { longExpiry, bearerExpiresInSeconds, refreshExpiresInSeconds } = req.body;
 
   if (!email || !password) {
-    // Bad request
-    res.status(400).json({
+    // Invalid log in request
+    return res.status(400).json({
       error: true,
       message: 'Request body incomplete, both email and password are required',
     });
-    return;
   }
 
+  longExpiry = longExpiry || false;
+  bearerExpiresInSeconds = bearerExpiresInSeconds || 600;
+  refreshExpiresInSeconds = refreshExpiresInSeconds || 86400;
 
-  // const { email } = req.body;
-  // const { password } = req.body;
-
-  // if (!email || !password) {
-  //   res.status(400).json({
-  //     error: true,
-  //     message: 'Request body incomplete - email and password needed',
-  //   });
-  //   return;
-  // }
-
-  // const queryUsers = req.db
-  //   .from('users')
-  //   .select('*')
-  //   .where('email', '=', email);
-
-  // queryUsers
-  //   .then((users) => {
-  //     if (users.length === 0) {
-  //       next(new Error('User does not exist'));
-  //     }
-
-  //     const user = users[0];
-  //     return bcrypt.compare(password, user.password);
-  //   }).then((match) => {
-  //     if (!match) {
-  //       next(new Error('Password does not match'));
-  //     }
-
-  //     // Create and return JWT token
-  //     const expiresIn = 60 * 60 * 24;
-  //     const exp = Math.floor(Date.now() / 1000) + expiresIn;
-  //     const token = jwt.sign({ exp }, JWT_SECRET);
-  //     res.status(200).json({
-  //       token,
-  //       token_type: 'Bearer',
-  //       expiresIn,
-  //     });
-  //   });
-
-  res.json({});
+  return req.db
+    .from('users')
+    .select('*')
+    .where('email', email)
+    .then((users) => {
+      if (users.length === 0) {
+        // User does not exist
+        return res.status(401).json({
+          error: true,
+          message: 'Incorrect email or password',
+        });
+      }
+      const user = users[0];
+      return bcrypt.compare(password, user.password)
+        .then((match) => {
+          if (!match) {
+            // Password does not match
+            return res.status(401).json({
+              error: true,
+              message: 'Incorrect email or password',
+            });
+          }
+          // Create and return JWT token
+          const bearerExpiresIn = longExpiry ? 60 * 60 * 24 * 365 : bearerExpiresInSeconds;
+          const refreshExpiresIn = longExpiry ? 60 * 60 * 24 * 365 : refreshExpiresInSeconds;
+          const bearerExp = Math.floor(Date.now() / 1000) + bearerExpiresIn;
+          const refreshExp = Math.floor(Date.now() / 1000) + refreshExpiresIn;
+          const bearerToken = jwt.sign({
+            email,
+            exp: bearerExp,
+          }, JWT_SECRET);
+          const refreshToken = jwt.sign({
+            email,
+            exp: refreshExp,
+          }, JWT_SECRET);
+          // Log in successful
+          return res.status(200).json({
+            bearerToken: {
+              token: bearerToken,
+              token_type: 'Bearer',
+              expires_in: bearerExpiresIn,
+            },
+            refreshToken: {
+              token: refreshToken,
+              token_type: 'Refresh',
+              expires_in: refreshExpiresIn,
+            },
+          });
+        });
+    });
 });
 
 /**
@@ -331,29 +344,79 @@ router.post('/login', (req, res, next) => {
  *                   type: string
  *                   example: Request body incomplete, refresh token required
  *       "401":
- *         description:
- *           Unauthorized. Click on 'Schema' below to see the possible error
- *           responses.
+ *         description: Unauthorized. Click on 'Schema' below to see the possible error responses.
  *         content:
  *           application/json:
  *             schema:
- *               "$ref": "#/components/schemas/TokenExpired"
+ *               oneOf:
+ *                 - "$ref": "#/components/schemas/TokenExpired"
+ *                 - "$ref": "#/components/schemas/InvalidJWT"
+ *             examples:
+ *               - "$ref": "#/components/examples/TokenExpired"
+ *               - "$ref": "#/components/examples/InvalidJWT"
  */
-router.post('/refresh', authorization, (req, res, next) => {
-  // uses users
+router.post('/refresh', (req, res, next) => {
+  const { refreshToken } = req.body;
 
-  res.json({
-    bearerToken: {
-      token: 'ajsonwebtoken',
-      token_type: 'Bearer',
-      expires_in: 600,
-    },
-    refreshToken: {
-      token: 'ajsonwebtoken',
-      token_type: 'Refresh',
-      expires_in: 86400,
-    },
-  });
+  if (!refreshToken) {
+    // Invalid refresh request
+    return res.status(400).json({
+      error: true,
+      message: 'Request body incomplete, refresh token required',
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(refreshToken, JWT_SECRET);
+    if (checkRefreshTokenIsInvalid(refreshToken)) {
+      // JWT token has expired
+      return res.status(401).json({
+        error: true,
+        message: 'JWT token has expired',
+      });
+    }
+
+    deregisterRefreshToken(refreshToken, decoded.exp);
+    // Create and return JWT token
+    const bearerExpiresIn = 600;
+    const refreshExpiresIn = 86400;
+    const bearerExp = Math.floor(Date.now() / 1000) + bearerExpiresIn;
+    const refreshExp = Math.floor(Date.now() / 1000) + refreshExpiresIn;
+    const newBearerToken = jwt.sign({
+      email: decoded.email,
+      exp: bearerExp,
+    }, JWT_SECRET);
+    const newRefreshToken = jwt.sign({
+      email: decoded.email,
+      exp: refreshExp,
+    }, JWT_SECRET);
+    // Token successfully refreshed
+    return res.status(200).json({
+      bearerToken: {
+        token: newBearerToken,
+        token_type: 'Bearer',
+        expires_in: bearerExpiresIn,
+      },
+      refreshToken: {
+        token: newRefreshToken,
+        token_type: 'Refresh',
+        expires_in: refreshExpiresIn,
+      },
+    });
+  } catch (e) {
+    if (e.name === 'TokenExpiredError') {
+      // JWT token has expired
+      return res.status(401).json({
+        error: true,
+        message: 'JWT token has expired',
+      });
+    }
+    // Invalid JWT token
+    return res.status(401).json({
+      error: true,
+      message: 'Invalid JWT token',
+    });
+  }
 });
 
 /**
@@ -402,19 +465,58 @@ router.post('/refresh', authorization, (req, res, next) => {
  *                   type: string
  *                   example: Request body incomplete, refresh token required
  *       "401":
- *         description:
- *           Unauthorized. Click on 'Schema' below to see the possible error
- *           responses.
+ *         description: Unauthorized. Click on 'Schema' below to see the possible error responses.
  *         content:
  *           application/json:
  *             schema:
- *               "$ref": "#/components/schemas/TokenExpired"
+ *               oneOf:
+ *                 - "$ref": "#/components/schemas/TokenExpired"
+ *                 - "$ref": "#/components/schemas/InvalidJWT"
+ *             examples:
+ *               - "$ref": "#/components/examples/TokenExpired"
+ *               - "$ref": "#/components/examples/InvalidJWT"
  */
 router.post('/logout', (req, res, next) => {
-  res.json({
-    error: false,
-    message: 'Token successfully invalidated',
-  });
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    // Invalid refresh request
+    return res.status(400).json({
+      error: true,
+      message: 'Request body incomplete, refresh token required',
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(refreshToken, JWT_SECRET);
+    // JWT token has expired
+    if (checkRefreshTokenIsInvalid(refreshToken)) {
+      return res.status(401).json({
+        error: true,
+        message: 'JWT token has expired',
+      });
+    }
+
+    deregisterRefreshToken(refreshToken, decoded.exp);
+    // Token successfully invalidated
+    return res.status(200).json({
+      error: false,
+      message: 'Token successfully invalidated',
+    });
+  } catch (e) {
+    if (e.name === 'TokenExpiredError') {
+      // JWT token has expired
+      return res.status(401).json({
+        error: true,
+        message: 'JWT token has expired',
+      });
+    }
+    // Invalid JWT token
+    return res.status(401).json({
+      error: true,
+      message: 'Invalid JWT token',
+    });
+  }
 });
 
 /**
@@ -423,7 +525,7 @@ router.post('/logout', (req, res, next) => {
  *   get:
  *     tags:
  *       - Authentication
- *     description: Get a user’s profile information as a JSON object. Click on 'Schema' below to see the possible error responses.
+ *     description: Get a user’s profile information as a JSON object.
  *     parameters:
  *       - name: email
  *         in: path
@@ -519,13 +621,61 @@ router.post('/logout', (req, res, next) => {
  *                   type: string
  *                   example: User not found
  */
-router.get('/:email/profile', (req, res, next) => {
+router.get('/:email/profile', authorizationMalform, (req, res, next) => {
   // uses users
 
-  res.json({
-    email: '',
-  });
+  const { email } = req.params;
+
+  return req.db
+    .from('users')
+    .select('*')
+    .where('email', email)
+    .then((users) => {
+      if (users.length === 0) {
+        // If {email} corresponds to a non-existent user, the following response will be returned with a status code of 404 Not Found.
+        return res.status(404).json({
+          error: true,
+          message: 'User not found',
+        });
+      }
+
+      const user = users[0];
+
+      if (req.authorized && req.username === email) {
+        // with a valid JWT bearer token belonging to the profile’s owner, will receive an object like this, with additional fields for date of birth and address
+        return res.status(200).json({
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          dob: user.dob,
+          address: user.address,
+        });
+      }
+      // An unauthorised request (without an ‘Authorized:’ header) or a request from a different user will receive an object like this
+      return res.status(200).json({
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      });
+    });
 });
+
+function isDateStringValid(dateString) {
+  if (dateString.length !== 10) {
+    return false;
+  }
+  if (!(/[0-9]{4}-[0-1][0-9]-[0-3][0-9]/).test(dateString)) {
+    return false;
+  }
+
+  const date = new Date(dateString);
+  if (date instanceof Date && !isNaN(date)) {
+    return date.getFullYear() === Number(year)
+      && date.getMonth() === Number(month) - 1 // Months are 0-indexed in JavaScript
+      && date.getDate() === Number(day);
+  }
+  return false;
+}
 
 /**
  * @openapi
@@ -533,6 +683,8 @@ router.get('/:email/profile', (req, res, next) => {
  *   put:
  *     tags:
  *       - Authentication
+ *     security:
+ *       - bearerAuth: []
  *     description: To provide profile information. Users can only change their own profile information.
  *     parameters:
  *       - name: email
@@ -678,13 +830,92 @@ router.get('/:email/profile', (req, res, next) => {
  *                   error: true
  *                   message: "Invalid input: dob must be a real date in format YYYY-MM-DD"
  */
-router.put('/:email/profile', (req, res, next) => {
+router.put('/:email/profile', authorizationMalform, (req, res, next) => {
   // uses users
 
-  res.json({
-    email: '',
-    message: 'Profile updated',
-  });
+  const { email } = req.params;
+  const {
+    firstName, lastName, dob, address,
+  } = req.body;
+
+  if (!firstName || !lastName || !dob || !address) {
+    // If the submitted object does not contain all of the fields.
+    return res.status(400).json({
+      error: true,
+      message: 'Request body incomplete: firstName, lastName, dob and address are required',
+    });
+  }
+
+  if (typeof firstName !== 'string'
+    || typeof lastName !== 'string'
+    || typeof dob !== 'string'
+    || typeof address !== 'string') {
+    // If any of the fields are not strings.
+    return res.status(400).json({
+      error: true,
+      message: 'Request body invalid: firstName, lastName, dob and address must be strings only',
+    });
+  }
+
+  if (!isDateStringValid(dob)) {
+    return res.status(400).json({
+      error: true,
+      message: 'Invalid input: dob must be a real date in format YYYY-MM-DD',
+    });
+  }
+
+  if (!req.authorized) {
+    return res.status(401).json({
+      error: true,
+      message: "Authorization header ('Bearer token') not found",
+    });
+  }
+
+  if (req.username !== email) {
+    // If the user is logged in with the wrong email (that is, the JWT is provided and is valid, but the credentials do not belong to the user whose profile the user is attempting to modify).
+    return req.status(403).json({
+      error: true,
+      message: 'Forbidden',
+    });
+  }
+
+  return req.db
+    .from('users')
+    .select('*')
+    .where('email', email)
+    .then((users) => {
+      if (users.length === 0) {
+        // If {email} corresponds to a non-existent user, the following response will be returned with a status code of 404 Not Found
+        return res.status(404).json({
+          error: true,
+          message: 'User not found',
+        });
+      }
+      return req.db
+        .from('users')
+        .where('email', email)
+        .update({
+          firstName,
+          lastName,
+          dob,
+          address,
+        })
+        .then(() => req.db
+          .from('users')
+          .select('*')
+          .where('email', email)
+          .then((newUsers) => {
+            const user = newUsers[0];
+            // If you successfully update a profile, the response will be an object containing the updated profile.
+            return res.status(200).json({
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              dob: user.dob,
+              address: user.address,
+            });
+          }));
+    });
 });
 
 module.exports = router;

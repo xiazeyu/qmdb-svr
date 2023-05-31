@@ -110,24 +110,22 @@ router.get('/search', (req, res, next) => {
 
   if (year && ((year.length !== 4) || !(/[0-9]{4}/).test(year))) {
     // Invalid year format
-    res
+    return res
       .status(400)
       .json({
         error: true,
         message: 'Invalid year format. Format must be yyyy.',
       });
-    return;
   }
 
   if (page && Number.isNaN(Number(page))) {
     // Invalid page format
-    res
+    return res
       .status(400)
       .json({
         error: true,
         message: 'Invalid page format. page must be a number.',
       });
-    return;
   }
 
   let query = req.db.from('basics').column({
@@ -148,14 +146,12 @@ router.get('/search', (req, res, next) => {
     query = query.where('year', year);
   }
 
-  query.paginate({
+  return query.paginate({
     perPage: 100,
     currentPage: Number(page ?? 1),
     isFromStart: false,
     isLengthAware: true,
-  }).then((data) => {
-    res.json(data);
-  });
+  }).then((data) => res.json(data));
 });
 
 /**
@@ -333,27 +329,26 @@ router.get('/data/:imdbID', (req, res, next) => {
 
   if (queryKeys.length > 0) {
     // Invalid query parameters
-    res
+    return res
       .status(400)
       .json({
         error: true,
         message: `Invalid query parameters: ${queryKeys.join(', ')}. Query parameters are not permitted.`,
       });
-    return;
   }
 
-  req.db
+  return req.db
     .from('basics')
     .select('*')
-    .where('tconst', '=', imdbID)
+    .where('tconst', imdbID)
     .then((movies) => {
       if (movies.length) {
         // An object containing the data for the movie.
         const movie = movies[0];
-        req.db
+        return req.db
           .from('principals')
           .select('*')
-          .where('tconst', '=', imdbID)
+          .where('tconst', imdbID)
           .then((principals) => {
             const ratings = [];
             if (movie.imdbRating) {
@@ -375,7 +370,7 @@ router.get('/data/:imdbID', (req, res, next) => {
               });
             }
 
-            res.status(200).json({
+            return res.status(200).json({
               title: movie.primaryTitle,
               year: movie.year,
               runtime: movie.runtimeMinutes,
@@ -393,13 +388,12 @@ router.get('/data/:imdbID', (req, res, next) => {
               plot: movie.plot,
             });
           });
-      } else {
-        // The requested movie could not be found
-        res.status(404).json({
-          error: true,
-          message: 'No record exists of a movie with this ID',
-        });
       }
+      // The requested movie could not be found
+      return res.status(404).json({
+        error: true,
+        message: 'No record exists of a movie with this ID',
+      });
     });
 });
 module.exports = router;

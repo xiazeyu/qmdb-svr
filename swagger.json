@@ -457,8 +457,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TokenExpired"
-                }
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/TokenExpired"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidJWT"
+                    }
+                  ]
+                },
+                "examples": [
+                  {
+                    "$ref": "#/components/examples/TokenExpired"
+                  },
+                  {
+                    "$ref": "#/components/examples/InvalidJWT"
+                  }
+                ]
               }
             }
           }
@@ -534,8 +549,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TokenExpired"
-                }
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/TokenExpired"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidJWT"
+                    }
+                  ]
+                },
+                "examples": [
+                  {
+                    "$ref": "#/components/examples/TokenExpired"
+                  },
+                  {
+                    "$ref": "#/components/examples/InvalidJWT"
+                  }
+                ]
               }
             }
           }
@@ -547,7 +577,7 @@
         "tags": [
           "Authentication"
         ],
-        "description": "Get a user’s profile information as a JSON object. Click on 'Schema' below to see the possible error responses.",
+        "description": "Get a user’s profile information as a JSON object.",
         "parameters": [
           {
             "name": "email",
@@ -705,6 +735,11 @@
       "put": {
         "tags": [
           "Authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
         ],
         "description": "To provide profile information. Users can only change their own profile information.",
         "parameters": [
@@ -942,7 +977,7 @@
         }
       }
     },
-    "/docs": {
+    "/": {
       "get": {
         "tags": [
           "Documents"
