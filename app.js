@@ -18,11 +18,11 @@ const app = express();
 // Middleware
 app.use(logger('dev'));
 app.use(database);
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(helmet());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 app.use(cors());
+app.use(helmet());
 
 // Routes
 app.use('/movies', moviesRouter);

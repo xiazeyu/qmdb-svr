@@ -73,46 +73,46 @@ const saltRounds = 10;
 router.post('/register', (req, res, next) => {
   // uses users
 
-  const { email } = req.body;
-  const { password } = req.body;
+  const { email, password } = req.body;
 
   if (!email || !password) {
+    // Bad request
     res.status(400).json({
       error: true,
-      message: 'Request body incomplete - email and password needed',
+      message: 'Request body incomplete, both email and password are required',
     });
     return;
   }
 
-  const queryUsers = req.db
+  req.db
     .from('users')
     .select('*')
-    .where('email', '=', email);
-
-  queryUsers
+    .where('email', '=', email)
     .then((users) => {
       if (users.length > 0) {
-        throw new Error('User already exists');
+        // User already exists
+        req.status(409).json({
+          error: true,
+          message: 'User already exists',
+        });
+        return;
       }
-
-      // Not matching users
-      return bcrypt.hash(password, saltRounds);
-    })
-    .then((passwordHash) => req.db.from('users').insert({
-      email,
-      password: passwordHash,
-    }))
-    .then(() => {
-      res.status(201).json({
-        success: true,
-        message: 'User created',
-      });
-    }).catch((e) => {
-      res.status(500).json({
-        success: false,
-        message: e.message,
-      });
+      bcrypt.hash(password, saltRounds)
+        .then((passwordHash) => {
+          req.db
+            .from('users')
+            .insert({
+              email,
+              password: passwordHash,
+            })
+            .then(() => {
+              res.status(201).json({
+                message: 'User created',
+              });
+            });
+        });
     });
+  res.json({});
 });
 
 /**
@@ -211,45 +211,60 @@ router.post('/register', (req, res, next) => {
 router.post('/login', (req, res, next) => {
   // uses users
 
-  const { email } = req.body;
-  const { password } = req.body;
+
+  const { email, password } = req.body;
 
   if (!email || !password) {
+    // Bad request
     res.status(400).json({
       error: true,
-      message: 'Request body incomplete - email and password needed',
+      message: 'Request body incomplete, both email and password are required',
     });
     return;
   }
 
-  const queryUsers = req.db
-    .from('users')
-    .select('*')
-    .where('email', '=', email);
 
-  queryUsers
-    .then((users) => {
-      if (users.length === 0) {
-        throw new Error('User does not exist');
-      }
+  // const { email } = req.body;
+  // const { password } = req.body;
 
-      const user = users[0];
-      return bcrypt.compare(password, user.password);
-    }).then((match) => {
-      if (!match) {
-        throw new Error('Password does not match');
-      }
+  // if (!email || !password) {
+  //   res.status(400).json({
+  //     error: true,
+  //     message: 'Request body incomplete - email and password needed',
+  //   });
+  //   return;
+  // }
 
-      // Create and return JWT token
-      const expiresIn = 60 * 60 * 24;
-      const exp = Math.floor(Date.now() / 1000) + expiresIn;
-      const token = jwt.sign({ exp }, JWT_SECRET);
-      res.status(200).json({
-        token,
-        token_type: 'Bearer',
-        expiresIn,
-      });
-    });
+  // const queryUsers = req.db
+  //   .from('users')
+  //   .select('*')
+  //   .where('email', '=', email);
+
+  // queryUsers
+  //   .then((users) => {
+  //     if (users.length === 0) {
+  //       next(new Error('User does not exist'));
+  //     }
+
+  //     const user = users[0];
+  //     return bcrypt.compare(password, user.password);
+  //   }).then((match) => {
+  //     if (!match) {
+  //       next(new Error('Password does not match'));
+  //     }
+
+  //     // Create and return JWT token
+  //     const expiresIn = 60 * 60 * 24;
+  //     const exp = Math.floor(Date.now() / 1000) + expiresIn;
+  //     const token = jwt.sign({ exp }, JWT_SECRET);
+  //     res.status(200).json({
+  //       token,
+  //       token_type: 'Bearer',
+  //       expiresIn,
+  //     });
+  //   });
+
+  res.json({});
 });
 
 /**

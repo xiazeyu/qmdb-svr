@@ -5,8 +5,9 @@ module.exports = process.env.env === 'development'
       host: '127.0.0.1',
       port: 3306,
       user: 'root',
-      password: 'Cab230!',
+      password: 'passw0rd',
       database: 'movies',
+      decimalNumbers: true,
     },
   }
   : {
@@ -15,7 +16,8 @@ module.exports = process.env.env === 'development'
       host: '127.0.0.1',
       port: 3306,
       user: 'root',
-      password: 'passw0rd',
+      password: 'Cab230!',
       database: 'movies',
+      decimalNumbers: true,
     },
   };

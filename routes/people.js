@@ -102,24 +102,57 @@ const router = express.Router();
  */
 router.get('/:id', (req, res, next) => {
   // uses basics, names
+
   const { id } = req.params;
 
-  res.json({
-    name: 'Patrick Stewart',
-    birthYear: 1940,
-    deathYear: null,
-    roles: [
-      {
-        movieName: 'Star Trek: First Contact',
-        movieId: 'tt0117731',
-        category: 'actor',
-        characters: [
-          'Picard',
-        ],
-        imdbRating: 7.6,
-      },
-    ],
-  });
+  const queryKeys = Object.keys(req.query);
+
+  if (queryKeys.length > 0) {
+    // Invalid query parameters
+    res
+      .status(400)
+      .json({
+        error: true,
+        message: `Invalid query parameters: ${queryKeys.join(', ')}. Query parameters are not permitted.`,
+      });
+    return;
+  }
+  // 3 x 401
+
+  req.db
+    .from('names')
+    .select('*')
+    .where('nconst', '=', id)
+    .then((people) => {
+      if (people.length) {
+        const person = people[0];
+        req.db
+          .from('principals')
+          .where('nconst', id)
+          .join('basics', 'principals.tconst', 'basics.tconst')
+          .select('*')
+          .then((roles) => {
+            res.status(200).json({
+              name: person.primaryName,
+              birthYear: person.birthYear,
+              deathYear: person.deathYear,
+              roles: roles.map((role) => ({
+                movieName: role.primaryTitle,
+                movieId: role.tconst,
+                category: role.category,
+                characters: JSON.parse(role.characters || '[]'),
+                imdbRating: role.imdbRating,
+              })),
+            });
+          });
+      } else {
+        // The requested person could not be found
+        res.status(404).json({
+          error: true,
+          message: 'No record exists of a person with this ID',
+        });
+      }
+    });
 });
 
 module.exports = router;

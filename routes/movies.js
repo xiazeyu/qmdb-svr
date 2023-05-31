@@ -105,16 +105,57 @@ const router = express.Router();
  */
 router.get('/search', (req, res, next) => {
   // uses basics
-  req.db
-    .from('basics')
-    .select('originalTitle', 'year', 'runtimeMinutes')
-    .then((rows) => {
-      res.json({ data: rows });
-    })
-    .catch((err) => {
-      console.log(err);
-      res.json({ Error: true, Message: 'Error in MySQL query' });
-    });
+
+  const { title, year, page } = req.query;
+
+  if (year && ((year.length !== 4) || !(/[0-9]{4}/).test(year))) {
+    // Invalid year format
+    res
+      .status(400)
+      .json({
+        error: true,
+        message: 'Invalid year format. Format must be yyyy.',
+      });
+    return;
+  }
+
+  if (page && Number.isNaN(Number(page))) {
+    // Invalid page format
+    res
+      .status(400)
+      .json({
+        error: true,
+        message: 'Invalid page format. page must be a number.',
+      });
+    return;
+  }
+
+  let query = req.db.from('basics').column({
+    title: 'primaryTitle',
+    year: 'year',
+    imdbID: 'tconst',
+    imdbRating: 'imdbRating',
+    rottenTomatoesRating: 'rottentomatoesRating',
+    metacriticRating: 'metacriticRating',
+    classification: 'rated',
+  }).select();
+
+  if (title) {
+    query = query.where('primaryTitle', 'like', `%${title}%`);
+  }
+
+  if (year) {
+    query = query.where('year', year);
+  }
+
+  query.paginate({
+    perPage: 100,
+    currentPage: Number(page ?? 1),
+    isFromStart: false,
+    isLengthAware: true,
+  }).then((data) => {
+    res.json(data);
+  });
 });
 
 /**
@@ -284,20 +325,81 @@ router.get('/search', (req, res, next) => {
  *                   example: No record exists of a movie with this ID
  */
 router.get('/data/:imdbID', (req, res, next) => {
-  // uses basics, principals, ratings
+  // uses basics, principals
 
-  // const { imdbID } = req.params;
+  const { imdbID } = req.params;
+
+  const queryKeys = Object.keys(req.query);
+
+  if (queryKeys.length > 0) {
+    // Invalid query parameters
+    res
+      .status(400)
+      .json({
+        error: true,
+        message: `Invalid query parameters: ${queryKeys.join(', ')}. Query parameters are not permitted.`,
+      });
+    return;
+  }
 
   req.db
     .from('basics')
     .select('*')
-    .where('tconst', '=', req.params.imdbID)
-    .then((rows) => {
-      res.json(rows);
-    })
-    .catch((err) => {
-      console.log(err);
-      res.json({ Error: true, Message: 'Error in MySQL query' });
+    .where('tconst', '=', imdbID)
+    .then((movies) => {
+      if (movies.length) {
+        // An object containing the data for the movie.
+        const movie = movies[0];
+        req.db
+          .from('principals')
+          .select('*')
+          .where('tconst', '=', imdbID)
+          .then((principals) => {
+            const ratings = [];
+            if (movie.imdbRating) {
+              ratings.push({
+                source: 'Internet Movie Database',
+                value: movie.imdbRating,
+              });
+            }
+            if (movie.rottentomatoesRating) {
+              ratings.push({
+                source: 'Rotten Tomatoes',
+                value: movie.rottentomatoesRating,
+              });
+            }
+            if (movie.metacriticRating) {
+              ratings.push({
+                source: 'Metacritic',
+                value: movie.metacriticRating,
+              });
+            }
+
+            res.status(200).json({
+              title: movie.primaryTitle,
+              year: movie.year,
+              runtime: movie.runtimeMinutes,
+              genres: movie.genres.split(','),
+              country: movie.country,
+              principals: principals.map((principal) => ({
+                id: principal.nconst,
+                category: principal.category,
+                name: principal.name,
+                characters: JSON.parse(principal.characters || '[]'),
+              })),
+              ratings,
+              boxoffice: movie.boxoffice,
+              poster: movie.poster,
+              plot: movie.plot,
+            });
+          });
+      } else {
+        // The requested movie could not be found
+        res.status(404).json({
+          error: true,
+          message: 'No record exists of a movie with this ID',
+        });
+      }
     });
 });
 module.exports = router;
